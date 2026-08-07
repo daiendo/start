@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: muriox
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  datasource:
+    url: jdbc:postgresql://localhost:5432/muriox
+    username: postgres
+    password: postgres
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto
+      schema: public
+app:
+  jwt:
+    issuer: muriox
+    access-token-ttl: 30m
+    public-key: classpath:keys/jwt-public.pem
+    private-key: classpath:keys/jwt-private.pem
