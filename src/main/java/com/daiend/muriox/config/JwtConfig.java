@@ -7,15 +7,14 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Objects;
 
+import com.daiend.muriox.security.ActiveSessionJwtValidator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.converter.RsaKeyConverters;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtValidators;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.jwt.*;
 
 @Configuration
 public class JwtConfig {
@@ -51,11 +50,19 @@ public class JwtConfig {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(KeyPair jwtKeyPair, JwtProperties jwtProperties) {
+    public JwtDecoder jwtDecoder(KeyPair jwtKeyPair, JwtProperties jwtProperties, ActiveSessionJwtValidator activeSessionJwtValidator) {
         RSAPublicKey publicKey = (RSAPublicKey) jwtKeyPair.getPublic();
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withPublicKey(publicKey)
                 .signatureAlgorithm(SignatureAlgorithm.RS256).build();
-        jwtDecoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(jwtProperties.issuer()));
+
+        OAuth2TokenValidator<Jwt> defaultValidator =
+                JwtValidators.createDefaultWithIssuer(
+                        jwtProperties.issuer());
+        OAuth2TokenValidator<Jwt> validator =
+                new DelegatingOAuth2TokenValidator<>(
+                        defaultValidator,
+                        activeSessionJwtValidator);
+        jwtDecoder.setJwtValidator(validator);
         return jwtDecoder;
     }
 

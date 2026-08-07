@@ -62,9 +62,18 @@ public class TokenService {
                 jwtProperties.accessTokenTtl().toSeconds());
     }
 
+    public boolean isSessionActive(Long userId, String sessionId) {
+        if (sessionId == null || sessionId.isBlank()) {
+            return false;
+        }
 
+        String storedUserId = stringRedisTemplate.opsForValue()
+                .get(sessionKey(sessionId));
 
-    public void  deleteToken (String sessionId) {
+        return userId.toString().equals(storedUserId);
+    }
+
+    public void  revokeSession(String sessionId) {
         stringRedisTemplate.delete(sessionKey(sessionId));
     }
 

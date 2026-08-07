@@ -32,7 +32,7 @@ public class AuthController {
     @PostMapping("/logout")
     public ApiResponse<Void> logout(@AuthenticationPrincipal CurrentUser currentUser) {
         authService.logout(currentUser.sessionId());
-        return ApiResponse.ok("注销成功");
+        return ApiResponse.okMessage("注销成功");
     }
 
 }

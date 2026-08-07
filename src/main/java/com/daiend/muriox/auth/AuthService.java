@@ -49,7 +49,7 @@ public class AuthService {
     }
 
     public void logout(String sessionId ) {
-        tokenService.deleteToken(sessionId);
+        tokenService.revokeSession(sessionId);
     }
 
 }
