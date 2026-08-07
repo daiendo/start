@@ -9,9 +9,15 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
-    default Optional<User> findUserByAccount(String account) {
+    default Optional<User> findByAccount(String account) {
         User user = selectOne(Wrappers.<User>lambdaQuery()
                 .eq(User::getAccount, account));
+        return Optional.ofNullable(user);
+    }
+
+    default Optional<User> findById(Long id) {
+        User user = selectOne(Wrappers.<User>lambdaQuery()
+                .eq(User::getId,id));
         return Optional.ofNullable(user);
     }
 }

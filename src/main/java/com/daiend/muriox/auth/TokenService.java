@@ -1,8 +1,10 @@
 package com.daiend.muriox.auth;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -15,26 +17,32 @@ import com.daiend.muriox.config.JwtProperties;
 @Service
 public class TokenService {
 
+    private static final String SESSION_PREFIX = "auth:session:";
+
     private final JwtProperties jwtProperties;
     private final JwtEncoder jwtEncoder;
+    private final StringRedisTemplate stringRedisTemplate;
 
-    public TokenService(JwtProperties jwtProperties, JwtEncoder jwtEncoder) {
+    public TokenService(JwtProperties jwtProperties, JwtEncoder jwtEncoder,StringRedisTemplate stringRedisTemplate) {
         this.jwtProperties = jwtProperties;
         this.jwtEncoder = jwtEncoder;
+        this.stringRedisTemplate = stringRedisTemplate;
 
     }
 
     public IssuedToken createToken(Long id) {
-        Instant issueAt = Instant.now();
-        Instant expiresAt = issueAt.plus(
+        Instant issuedAt = Instant.now();
+        Instant expiresAt = issuedAt.plus(
                 jwtProperties.accessTokenTtl());
         String sessionId = UUID.randomUUID().toString();
+        String sessionKey = sessionKey(sessionId);
+        Duration sessionDuration = jwtProperties.accessTokenTtl();
         String tokenId = UUID.randomUUID().toString();
 
         JwtClaimsSet claimsSet = JwtClaimsSet.builder()
                 .issuer(jwtProperties.issuer())
                 .subject(id.toString())
-                .issuedAt(issueAt)
+                .issuedAt(issuedAt)
                 .expiresAt(expiresAt)
                 .id(tokenId)
                 .claim("sid", sessionId)
@@ -44,8 +52,25 @@ public class TokenService {
 
         String token = jwtEncoder.encode(JwtEncoderParameters.from(header, claimsSet)).getTokenValue();
 
+        stringRedisTemplate.opsForValue().set(
+                sessionKey,
+                id.toString(),
+                sessionDuration);
+
         return new IssuedToken(
                 token,
                 jwtProperties.accessTokenTtl().toSeconds());
     }
+
+
+
+    public void  deleteToken (String sessionId) {
+        stringRedisTemplate.delete(sessionKey(sessionId));
+    }
+
+    private String sessionKey(String sessionId) {
+        return SESSION_PREFIX + sessionId;
+    }
+
+
 }

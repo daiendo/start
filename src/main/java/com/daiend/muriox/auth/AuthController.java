@@ -1,5 +1,6 @@
 package com.daiend.muriox.auth;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,6 +28,11 @@ public class AuthController {
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         return ApiResponse.ok(authService.login(loginRequest));
+    }
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(@AuthenticationPrincipal CurrentUser currentUser) {
+        authService.logout(currentUser.sessionId());
+        return ApiResponse.ok("注销成功");
     }
 
 }

@@ -31,7 +31,7 @@ public class AuthService {
             throw new BusinessException("验证码不正确");
         }
 
-        User user = userMapper.findUserByAccount(loginRequest.account())
+        User user = userMapper.findByAccount(loginRequest.account())
                 .orElseThrow(() -> new BusinessException("账号或密码错误"));
 
         if (!passwordEncoder.matches(loginRequest.password(), user.getPasswordHash())) {
@@ -46,6 +46,10 @@ public class AuthService {
         return new LoginResponse(issuedToken.token(),
                 issuedToken.expiresInSeconds());
 
+    }
+
+    public void logout(String sessionId ) {
+        tokenService.deleteToken(sessionId);
     }
 
 }

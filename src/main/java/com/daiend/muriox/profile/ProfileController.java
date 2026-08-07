@@ -20,7 +20,7 @@ public class ProfileController {
     @GetMapping("/profile")
     public ApiResponse<ProfileResponse> profile(
             @AuthenticationPrincipal CurrentUser currentUser) {
-                return ApiResponse.ok(profileService.getProfile(currentUser.id()));
+                return ApiResponse.ok(profileService.profile(currentUser.id()));
     }
 
 }
