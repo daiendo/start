@@ -61,7 +61,11 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(authorize -> authorize
                                                 .requestMatchers(
                                                                 "/api/authority/auth/login",
-                                                                "/api/authority/auth/captcha")
+                                                                "/api/authority/auth/captcha",
+                                                                "/swagger-ui/**",
+                                                                "/swagger-ui.html",
+                                                                "/v3/api-docs/**",
+                                                                "/v3/api-docs.yaml")
                                                 .permitAll()
                                                 .anyRequest().authenticated())
                                 .build();

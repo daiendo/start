@@ -1,5 +1,6 @@
 package com.daiend.muriox.auth;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,11 +21,13 @@ public class AuthController {
         this.authService = authService;
     }
 
+    @SecurityRequirements
     @GetMapping("/captcha")
     public ApiResponse<CaptchaResponse> captcha() {
         return ApiResponse.ok(authService.createCaptcha());
     }
 
+    @SecurityRequirements
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         return ApiResponse.ok(authService.login(loginRequest));
