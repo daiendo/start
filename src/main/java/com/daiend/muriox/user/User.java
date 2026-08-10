@@ -7,8 +7,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Size;
 
 @TableName("sys_user")
 public class User {
@@ -16,11 +14,12 @@ public class User {
     private Long id;
     private String account;
     private String username;
+    private String avatar;
+    private String sex;
     private String passwordHash;
     private Boolean enabled;
-    @Email
-    @Size(max=254)
     private String email;
+    private String mobile;
     private String remark;
 
     @TableField(fill = FieldFill.INSERT)
@@ -52,7 +51,21 @@ public class User {
     public void setUsername(String name) {
         username = name;
     }
+    public String getAvatar() {
+        return avatar;
+    }
 
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public String getSex() {
+        return sex;
+    }
+
+    public void setSex(String sex) {
+        this.sex = sex;
+    }
     public String getPasswordHash() {
         return passwordHash;
     }
@@ -74,6 +87,13 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+    public String getMobile() {
+        return mobile;
+    }
+
+    public void setMobile(String mobile) {
+        this.mobile = mobile;
     }
 
     public String getRemark() {

@@ -1,9 +1,10 @@
 package com.daiend.muriox.profile;
 
 import com.daiend.muriox.common.exception.BusinessException;
+import com.daiend.muriox.dict.DictService;
 import com.daiend.muriox.user.User;
 import com.daiend.muriox.user.UserMapper;
-import jakarta.validation.Valid;
+import com.daiend.muriox.user.UserResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -11,20 +12,37 @@ import java.util.List;
 
 @Service
 public class ProfileService {
+    private static final String USER_GENDER_DICT_CODE =  "user_gender";
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final DictService dictService;
 
 
-    public ProfileService(UserMapper userMapper, PasswordEncoder passwordEncoder){
+    public ProfileService(UserMapper userMapper, PasswordEncoder passwordEncoder, DictService dictService){
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
+        this.dictService = dictService;
     }
 
 
     public ProfileResponse profile(Long id) {
         User user = userMapper.findById(id).orElseThrow(()->new BusinessException("用户不存在"));
-        ProfileUserResponse profileUser = new ProfileUserResponse(id,user.getAccount(),user.getUsername(),user.getEmail(),user.getRemark());
-        return  new ProfileResponse(profileUser, List.of(),List.of());
+        String sexLabel = dictService
+                .findLabel(
+                        USER_GENDER_DICT_CODE,
+                        user.getSex())
+                .orElse("未知");
+        UserResponse userResponse = new UserResponse(
+                id,
+                user.getAccount(),
+                user.getUsername(),
+                user.getAvatar(),
+                user.getEmail(),
+                user.getMobile(),
+                user.getSex(),
+                sexLabel,
+                user.getRemark());
+        return  new ProfileResponse(userResponse, List.of(),List.of());
     }
     public void changePassword(Long id,ChangePassRequest changePassRequest){
         User user = userMapper.findById(id).orElseThrow(()->new BusinessException("用户不存在"));
