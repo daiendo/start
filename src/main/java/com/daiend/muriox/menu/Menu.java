@@ -1,70 +1,28 @@
 package com.daiend.muriox.menu;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.daiend.muriox.common.persistence.BaseRemarkEntity;
 
-import java.time.OffsetDateTime;
 
 @TableName("sys_menu")
-public class Menu {
+public class Menu extends BaseRemarkEntity {
 
     @TableId(type = IdType.AUTO)
     private Long id;
-
     private Long parentId;
-
-    /**
-     * 1：目录，2：页面
-     */
-    private Integer menuType;
-
-    /**
-     * Vue Router 的路由名称
-     */
-    private String name;
-
-    /**
-     * 菜单显示标题
-     */
-    private String title;
-
+    private Integer menuType;// 1：目录，2：页面
+    private String name;// Vue Router 的路由名称
+    private String title;//菜单显示标题
     private String path;
-
-    /**
-     * 前端页面组件路径，目录节点可以为空
-     */
-    private String component;
-
+    private String component;// 前端页面组件路径，目录节点可以为空
     private String redirect;
-
     private String icon;
-
     private Boolean hidden;
-
     private Boolean status;
-
     private Integer sortOrder;
-
     private String description;
-
-    private String remark;
-
-    @TableField(fill = FieldFill.INSERT)
-    private OffsetDateTime createdAt;
-
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private OffsetDateTime updatedAt;
-
-    public Boolean getStatus() {
-        return status;
-    }
-
-    public void setStatus(Boolean status) {
-        this.status = status;
-    }
 
     public Long getId() {
         return id;
@@ -146,6 +104,14 @@ public class Menu {
         this.hidden = hidden;
     }
 
+    public Boolean getStatus() {
+        return status;
+    }
+
+    public void setStatus(Boolean status) {
+        this.status = status;
+    }
+
     public Integer getSortOrder() {
         return sortOrder;
     }
@@ -162,27 +128,5 @@ public class Menu {
         this.description = description;
     }
 
-    public String getRemark() {
-        return remark;
-    }
 
-    public void setRemark(String remark) {
-        this.remark = remark;
-    }
-
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 }

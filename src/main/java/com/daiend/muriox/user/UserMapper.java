@@ -17,7 +17,7 @@ public interface UserMapper extends BaseMapper<User> {
 
     default Optional<User> findById(Long id) {
         User user = selectOne(Wrappers.<User>lambdaQuery()
-                .eq(User::getId,id));
+                .eq(User::getId, id));
         return Optional.ofNullable(user);
     }
 }

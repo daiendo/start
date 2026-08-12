@@ -21,15 +21,15 @@ public class ProfileController {
     @GetMapping("/info")
     public ApiResponse<ProfileResponse> profile(
             @AuthenticationPrincipal CurrentUser currentUser) {
-                return ApiResponse.ok(profileService.profile(currentUser.id()));
+        return ApiResponse.ok(profileService.profile(currentUser.id()));
     }
 
     @PostMapping("/changePassword")
     public ApiResponse<Void> changePassword(
             @AuthenticationPrincipal CurrentUser currentUser,
-          @Valid @RequestBody ChangePassRequest changePassRequest
-    ){
-        profileService.changePassword(currentUser.id(),changePassRequest);
-       return  ApiResponse.okMessage("修改成功");
+            @Valid @RequestBody ChangePassRequest changePassRequest
+    ) {
+        profileService.changePassword(currentUser.id(), changePassRequest);
+        return ApiResponse.okMessage("修改成功");
     }
 }

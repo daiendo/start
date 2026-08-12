@@ -3,9 +3,9 @@ package com.daiend.muriox.auth;
 import jakarta.validation.constraints.NotBlank;
 
 public record LoginRequest(
-                @NotBlank(message = "账号不能为空") String account,
-                @NotBlank(message = "密码不能为空") String password,
-                @NotBlank(message = "验证码uuid不能为空") String captchaUuid,
-                @NotBlank(message = "验证码不能为空") String captchaCode) {
+        @NotBlank(message = "账号不能为空") String account,
+        @NotBlank(message = "密码不能为空") String password,
+        @NotBlank(message = "验证码uuid不能为空") String captchaUuid,
+        @NotBlank(message = "验证码不能为空") String captchaCode) {
 
 }

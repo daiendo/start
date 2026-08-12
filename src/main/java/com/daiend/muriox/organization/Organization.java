@@ -1,11 +1,13 @@
 package com.daiend.muriox.organization;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.daiend.muriox.common.persistence.BaseRemarkEntity;
 
-import java.time.OffsetDateTime;
 
 @TableName("sys_organization")
-public class Organization {
+public class Organization extends BaseRemarkEntity {
     @TableId(type = IdType.AUTO)
     private Long id;
 
@@ -17,13 +19,7 @@ public class Organization {
 
     private Boolean status;
 
-    private String remark;
 
-    @TableField(fill = FieldFill.INSERT)
-    private OffsetDateTime createdAt;
-
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private OffsetDateTime updatedAt;
     public Long getId() {
         return id;
     }
@@ -64,27 +60,4 @@ public class Organization {
         this.status = status;
     }
 
-    public String getRemark() {
-        return remark;
-    }
-
-    public void setRemark(String remark) {
-        this.remark = remark;
-    }
-
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 }

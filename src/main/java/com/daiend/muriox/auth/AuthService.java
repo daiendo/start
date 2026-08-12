@@ -15,7 +15,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     public AuthService(CaptchaService captchaService, UserMapper userMapper, TokenService tokenService,
-            PasswordEncoder passwordEncoder) {
+                       PasswordEncoder passwordEncoder) {
         this.captchaService = captchaService;
         this.userMapper = userMapper;
         this.tokenService = tokenService;
@@ -38,7 +38,7 @@ public class AuthService {
             throw new BusinessException("账号或密码错误");
         }
 
-       if (!Boolean.TRUE.equals(user.getEnabled())) {
+        if (!Boolean.TRUE.equals(user.getEnabled())) {
             throw new BusinessException("账号已被禁用");
         }
 
@@ -48,7 +48,7 @@ public class AuthService {
 
     }
 
-    public void logout(String sessionId ) {
+    public void logout(String sessionId) {
         tokenService.revokeSession(sessionId);
     }
 

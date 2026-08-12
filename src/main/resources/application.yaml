@@ -10,6 +10,7 @@ spring:
     username: postgres
     password: postgres
 mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
   configuration:
     map-underscore-to-camel-case: true
   global-config:
@@ -17,6 +18,8 @@ mybatis-plus:
       id-type: auto
       schema: public
 app:
+  authority-cache:
+    ttl: 30m
   jwt:
     issuer: muriox
     access-token-ttl: 30m

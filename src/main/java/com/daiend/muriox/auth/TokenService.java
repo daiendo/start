@@ -23,7 +23,7 @@ public class TokenService {
     private final JwtEncoder jwtEncoder;
     private final StringRedisTemplate stringRedisTemplate;
 
-    public TokenService(JwtProperties jwtProperties, JwtEncoder jwtEncoder,StringRedisTemplate stringRedisTemplate) {
+    public TokenService(JwtProperties jwtProperties, JwtEncoder jwtEncoder, StringRedisTemplate stringRedisTemplate) {
         this.jwtProperties = jwtProperties;
         this.jwtEncoder = jwtEncoder;
         this.stringRedisTemplate = stringRedisTemplate;
@@ -73,7 +73,7 @@ public class TokenService {
         return userId.toString().equals(storedUserId);
     }
 
-    public void  revokeSession(String sessionId) {
+    public void revokeSession(String sessionId) {
         stringRedisTemplate.delete(sessionKey(sessionId));
     }
 

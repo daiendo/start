@@ -15,6 +15,7 @@ public class ActiveSessionJwtValidator implements OAuth2TokenValidator<Jwt> {
                     "登录会话已失效",
                     null);
     private final TokenService tokenService;
+
     public ActiveSessionJwtValidator(TokenService tokenService) {
         this.tokenService = tokenService;
     }
@@ -22,8 +23,8 @@ public class ActiveSessionJwtValidator implements OAuth2TokenValidator<Jwt> {
     @Override
     public OAuth2TokenValidatorResult validate(Jwt jwt) {
 
-    String subject = jwt.getSubject();
-    String sessionId = jwt.getClaimAsString("sid");
+        String subject = jwt.getSubject();
+        String sessionId = jwt.getClaimAsString("sid");
 
         if (subject == null || sessionId == null) {
             return OAuth2TokenValidatorResult.failure(INVALID_TOKEN);
@@ -34,7 +35,7 @@ public class ActiveSessionJwtValidator implements OAuth2TokenValidator<Jwt> {
             if (tokenService.isSessionActive(userId, sessionId)) {
                 return OAuth2TokenValidatorResult.success();
             }
-        } catch (NumberFormatException exception){
+        } catch (NumberFormatException exception) {
             return OAuth2TokenValidatorResult.failure(INVALID_TOKEN);
         }
 

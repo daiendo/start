@@ -1,23 +1,19 @@
-package com.daiend.muriox.post;
+package com.daiend.muriox.resource;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.daiend.muriox.common.persistence.BaseRemarkEntity;
 
-import java.time.OffsetDateTime;
-
-@TableName("sys_post")
-public class Post extends BaseRemarkEntity {
-
+@TableName("sys_resource")
+public class Resource extends BaseRemarkEntity {
     @TableId(type = IdType.AUTO)
     private Long id;
-    private Long orgId;
-    private String code;
+    private Long menuId;
     private String name;
-    private Integer sortOrder;
+    private String code;
     private Boolean status;
-
+    private Integer sortOrder;
 
     public Long getId() {
         return id;
@@ -27,20 +23,12 @@ public class Post extends BaseRemarkEntity {
         this.id = id;
     }
 
-    public Long getOrgId() {
-        return orgId;
+    public Long getMenuId() {
+        return menuId;
     }
 
-    public void setOrgId(Long orgId) {
-        this.orgId = orgId;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
+    public void setMenuId(Long menuId) {
+        this.menuId = menuId;
     }
 
     public String getName() {
@@ -51,12 +39,12 @@ public class Post extends BaseRemarkEntity {
         this.name = name;
     }
 
-    public Integer getSortOrder() {
-        return sortOrder;
+    public String getCode() {
+        return code;
     }
 
-    public void setSortOrder(Integer sortOrder) {
-        this.sortOrder = sortOrder;
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public Boolean getStatus() {
@@ -67,4 +55,11 @@ public class Post extends BaseRemarkEntity {
         this.status = status;
     }
 
+    public Integer getSortOrder() {
+        return sortOrder;
+    }
+
+    public void setSortOrder(Integer sortOrder) {
+        this.sortOrder = sortOrder;
+    }
 }

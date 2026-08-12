@@ -11,20 +11,20 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
-    private  static final String BEARER_AUTH  = "bearerAuth";
+    private static final String BEARER_AUTH = "bearerAuth";
 
     @Bean
     public OpenAPI openAPI() {
         SecurityScheme securityScheme = new SecurityScheme().type(SecurityScheme.Type.HTTP)
                 .scheme("bearer").bearerFormat("JWT");
 
-        return  new OpenAPI()
+        return new OpenAPI()
                 .info(new Info()
-                    .title("Muriox API")
-                    .version("1.0")
-                    .description("Muriox 后端接口文档"))
+                        .title("Muriox API")
+                        .version("1.0")
+                        .description("Muriox 后端接口文档"))
                 .components(new Components()
-                        .addSecuritySchemes(BEARER_AUTH , securityScheme))
+                        .addSecuritySchemes(BEARER_AUTH, securityScheme))
                 .addSecurityItem(new SecurityRequirement()
                         .addList(BEARER_AUTH));
     }

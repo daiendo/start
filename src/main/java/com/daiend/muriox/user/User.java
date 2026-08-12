@@ -7,9 +7,10 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.daiend.muriox.common.persistence.BaseRemarkEntity;
 
 @TableName("sys_user")
-public class User {
+public class User extends BaseRemarkEntity {
     @TableId(type = IdType.AUTO)
     private Long id;
     private String account;
@@ -20,13 +21,6 @@ public class User {
     private Boolean enabled;
     private String email;
     private String mobile;
-    private String remark;
-
-    @TableField(fill = FieldFill.INSERT)
-    private OffsetDateTime createdAt;
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private OffsetDateTime updatedAt;
-
 
     public Long getId() {
         return id;
@@ -51,6 +45,7 @@ public class User {
     public void setUsername(String name) {
         username = name;
     }
+
     public String getAvatar() {
         return avatar;
     }
@@ -66,6 +61,7 @@ public class User {
     public void setSex(String sex) {
         this.sex = sex;
     }
+
     public String getPasswordHash() {
         return passwordHash;
     }
@@ -81,6 +77,7 @@ public class User {
     public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
     }
+
     public String getEmail() {
         return email;
     }
@@ -88,34 +85,12 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
+
     public String getMobile() {
         return mobile;
     }
 
     public void setMobile(String mobile) {
         this.mobile = mobile;
-    }
-
-    public String getRemark() {
-        return remark;
-    }
-
-    public void setRemark(String remark) {
-        this.remark = remark;
-    }
-
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 }

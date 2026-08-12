@@ -15,6 +15,7 @@ public class AuditMetaObjectHandler implements MetaObjectHandler {
         strictInsertFill(metaObject, "createdAt", OffsetDateTime.class, now);
         strictInsertFill(metaObject, "updatedAt", OffsetDateTime.class, now);
     }
+
     @Override
     public void updateFill(MetaObject metaObject) {
         OffsetDateTime now = OffsetDateTime.now();

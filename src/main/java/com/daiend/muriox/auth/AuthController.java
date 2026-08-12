@@ -32,6 +32,7 @@ public class AuthController {
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         return ApiResponse.ok(authService.login(loginRequest));
     }
+
     @PostMapping("/logout")
     public ApiResponse<Void> logout(@AuthenticationPrincipal CurrentUser currentUser) {
         authService.logout(currentUser.sessionId());

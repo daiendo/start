@@ -8,7 +8,7 @@ import java.util.List;
 public record ProfileResponse(
         UserResponse user,
         List<String> permissionsList,
-        List<MenuNode>  menus
+        List<MenuNode> menus
 ) {
-    
+
 }

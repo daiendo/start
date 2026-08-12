@@ -12,7 +12,7 @@ public record ApiResponse<T>(
         return new ApiResponse<>(200, "success", data, List.of());
     }
 
-    public static ApiResponse<Void> okMessage(String message){
+    public static ApiResponse<Void> okMessage(String message) {
         return new ApiResponse<>(200, message, null, List.of());
     }
 
