@@ -105,22 +105,9 @@ public class ResourceService {
                     "权限编码已存在");
         }
 
-        boolean authorityChanged =
-                !Objects.equals(
-                        resource.getMenuId(),
-                        request.menuId())
-                        || !Objects.equals(
-                        resource.getCode(),
-                        code)
-                        || !Objects.equals(
-                        resource.getStatus(),
-                        request.status());
-
         List<Long> affectedUserIds =
-                authorityChanged
-                        ? resourceMapper.findUserIdsByResourceId(
-                        resource.getId())
-                        : List.of();
+                resourceMapper.findUserIdsByResourceId(
+                        resource.getId());
 
         resource.setMenuId(request.menuId());
         resource.setName(request.name().trim());
@@ -138,10 +125,8 @@ public class ResourceService {
                     "编辑按钮权限失败");
         }
 
-        if (authorityChanged) {
-            authorityChangePublisher.publishForUsers(
-                    affectedUserIds);
-        }
+        authorityChangePublisher.publishForUsers(
+                affectedUserIds);
 
         return resource.getId();
     }
@@ -188,7 +173,6 @@ public class ResourceService {
 
         authorityChangePublisher.publishForUsers(
                 affectedUserIds);
-        ;
     }
 
     private void validateMenu(Long menuId) {

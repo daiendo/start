@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.daiend.muriox.role.RoleMapper">
+
+    <select
+            id="findUserIdsByRoleIds"
+            resultType="java.lang.Long">
+        SELECT DISTINCT user_role.user_id
+        FROM sys_user_role user_role
+        WHERE user_role.role_id IN
+        <foreach
+                collection="roleIds"
+                item="roleId"
+                open="("
+                separator=","
+                close=")">
+            #{roleId}
+        </foreach>
+    </select>
+
+    <delete id="deleteMenusByRoleId">
+        DELETE FROM sys_role_menu
+        WHERE role_id = #{roleId}
+    </delete>
+
+    <delete id="deleteResourcesByRoleId">
+        DELETE FROM sys_role_resource
+        WHERE role_id = #{roleId}
+    </delete>
+
+    <insert id="insertRoleMenus">
+        INSERT INTO sys_role_menu (
+        role_id,
+        menu_id
+        )
+        VALUES
+        <foreach
+                collection="menuIds"
+                item="menuId"
+                separator=",">
+            (
+            #{roleId},
+            #{menuId}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="insertRoleResources">
+        INSERT INTO sys_role_resource (
+        role_id,
+        resource_id
+        )
+        VALUES
+        <foreach
+                collection="resourceIds"
+                item="resourceId"
+                separator=",">
+            (
+            #{roleId},
+            #{resourceId}
+            )
+        </foreach>
+    </insert>
+
+    <delete id="deleteUsersByRoleId">
+        DELETE FROM sys_user_role
+        WHERE role_id = #{roleId}
+    </delete>
+
+    <insert id="insertRoleUsers">
+        INSERT INTO sys_user_role (
+        role_id,
+        user_id
+        )
+        VALUES
+        <foreach
+                collection="userIds"
+                item="userId"
+                separator=",">
+            (
+            #{roleId},
+            #{userId}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

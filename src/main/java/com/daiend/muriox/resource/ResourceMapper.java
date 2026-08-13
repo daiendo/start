@@ -78,4 +78,19 @@ public interface ResourceMapper extends BaseMapper<Resource> {
             @Param("resourceIds")
             Collection<Long> resourceIds);
 
+    default boolean existsByMenuId(Long menuId) {
+        return selectCount(
+                Wrappers.<Resource>lambdaQuery()
+                        .eq(Resource::getMenuId, menuId)
+        ) > 0;
+    }
+    default boolean existsByMenuIds(
+            Collection<Long> menuIds) {
+
+        return selectCount(
+                Wrappers.<Resource>lambdaQuery()
+                        .in(Resource::getMenuId, menuIds)
+        ) > 0;
+    }
+
 }

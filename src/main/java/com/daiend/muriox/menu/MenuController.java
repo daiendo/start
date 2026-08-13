@@ -40,4 +40,26 @@ public class MenuController {
     public ApiResponse<Long> addMenu(@Valid @RequestBody MenuRequest menu) {
         return ApiResponse.ok(menuService.addMenu(menu));
     }
+
+    @GetMapping("/{id}")
+    public ApiResponse<Menu> getMenu(@PathVariable Long id) {
+        return ApiResponse.ok(menuService.getMenu(id));
+    }
+
+    @PutMapping
+    @PreAuthorize("hasAuthority('menu:edit')")
+    public ApiResponse<Long> updateMenu(@Valid @RequestBody MenuUpdateRequest menuUpdateRequest) {
+        return ApiResponse.ok(menuService.updateMenu(menuUpdateRequest));
+    }
+
+    @DeleteMapping
+    @PreAuthorize("hasAuthority('menu:delete')")
+    public ApiResponse<Void> deleteMenus(
+            @RequestParam List<Long> ids) {
+
+        menuService.deleteMenus(ids);
+
+        return ApiResponse.okMessage(
+                "删除菜单成功");
+    }
 }
