@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.daiend.muriox.common.persistence.BaseRemarkEntity;
 
-import java.time.OffsetDateTime;
 
 @TableName("sys_post")
 public class Post extends BaseRemarkEntity {

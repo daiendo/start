@@ -175,6 +175,7 @@ public class UserAuthorityService {
                 + userId
                 + "}"
                 + PERMISSIONS_SUFFIX;
+
     }
 
     private String menusKey(Long userId) {

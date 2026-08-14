@@ -1,4 +1,4 @@
-package com.daiend.muriox.organization;
+package com.daiend.muriox.organize;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -7,7 +7,7 @@ import com.daiend.muriox.common.persistence.BaseRemarkEntity;
 
 
 @TableName("sys_organization")
-public class Organization extends BaseRemarkEntity {
+public class Organize extends BaseRemarkEntity {
     @TableId(type = IdType.AUTO)
     private Long id;
 
@@ -27,6 +27,7 @@ public class Organization extends BaseRemarkEntity {
     public void setId(Long id) {
         this.id = id;
     }
+
 
     public String getName() {
         return name;
