@@ -9,6 +9,10 @@ spring:
     url: jdbc:postgresql://localhost:5432/muriox
     username: postgres
     password: postgres
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
   configuration:
@@ -25,3 +29,9 @@ app:
     access-token-ttl: 30m
     public-key: classpath:keys/jwt-public.pem
     private-key: classpath:keys/jwt-private.pem
+  storage:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:muriox}
+    secret-key: ${MINIO_SECRET_KEY:Muriox@2026Dev}
+    bucket: ${MINIO_BUCKET:muriox}
+    presigned-url-ttl: 30m

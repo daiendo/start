@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.daiend.muriox.user.UserMapper">
+
+    <insert id="insertUserPosts">
+        INSERT INTO sys_user_post (
+        user_id,
+        post_id
+        )
+        VALUES
+        <foreach
+                collection="postIds"
+                item="postId"
+                separator=",">
+            (
+            #{userId},
+            #{postId}
+            )
+        </foreach>
+    </insert>
+
+    <select
+            id="selectUserPage"
+            resultType="com.daiend.muriox.user.UserPageRow">
+
+        SELECT
+        user_info.id,
+        user_info.org_id,
+        organize.name AS org_name,
+        user_info.account,
+        user_info.username,
+        user_info.avatar,
+        user_info.sex,
+        user_info.enabled,
+
+        COALESCE(
+        (
+        SELECT STRING_AGG(
+        post_info.name,
+        '、'
+        ORDER BY
+        post_info.sort_order,
+        post_info.id
+        )
+        FROM sys_user_post user_post
+        JOIN sys_post post_info
+        ON post_info.id = user_post.post_id
+        WHERE user_post.user_id = user_info.id
+        ),
+        ''
+        ) AS post_names,
+
+        user_info.built_in,
+        user_info.remark,
+        user_info.created_at
+
+        FROM sys_user user_info
+
+        LEFT JOIN sys_organize organize
+        ON organize.id = user_info.org_id
+
+        <where>
+            <if test="account != null">
+                AND user_info.account ILIKE
+                CONCAT('%', #{account}, '%')
+            </if>
+
+            <if test="orgId != null">
+                AND user_info.org_id = #{orgId}
+            </if>
+        </where>
+
+        ORDER BY
+        user_info.created_at DESC,
+        user_info.id DESC
+    </select>
+</mapper>

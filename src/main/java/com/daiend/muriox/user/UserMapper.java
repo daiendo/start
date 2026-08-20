@@ -1,13 +1,15 @@
 package com.daiend.muriox.user;
 
-import java.util.List;
-import java.util.Optional;
-
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import org.apache.ibatis.annotations.Mapper;
-
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
@@ -36,4 +38,31 @@ public interface UserMapper extends BaseMapper<User> {
 
         return selectList(query);
     }
+
+    default boolean existsByAccount(String account) {
+        return selectCount(Wrappers.<User>lambdaQuery().eq(User::getAccount, account)) > 0;
+    }
+
+    default boolean existsByEmail(String email) {
+        return selectCount(Wrappers.<User>lambdaQuery().eq(User::getEmail, email)) > 0;
+    }
+
+    default boolean existsByMobile(String mobile) {
+        return selectCount(Wrappers.<User>lambdaQuery().eq(User::getMobile, mobile)) > 0;
+    }
+
+    Page<UserPageRow> selectUserPage(
+            Page<UserPageRow> page,
+
+            @Param("account")
+            String account,
+
+            @Param("orgId")
+            Long orgId);
+
+    int insertUserPosts(
+            @Param("userId") Long userId,
+            @Param("postIds") Collection<Long> postIds);
+
+
 }

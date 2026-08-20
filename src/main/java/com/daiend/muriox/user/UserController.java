@@ -1,10 +1,11 @@
 package com.daiend.muriox.user;
 
 import com.daiend.muriox.common.ApiResponse;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import com.daiend.muriox.common.PageResult;
+import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -13,9 +14,11 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final AvatarService avatarService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, AvatarService avatarService) {
         this.userService = userService;
+        this.avatarService = avatarService;
     }
 
     @GetMapping("/list")
@@ -23,5 +26,46 @@ public class UserController {
 
         return ApiResponse.ok(userService.getUsers(username));
 
+    }
+
+    @PostMapping(
+            value = "/avatar",
+            consumes = "multipart/form-data")
+    @PreAuthorize("hasAuthority('user:upload:avatar')")
+    public ApiResponse<AvatarResponse> uploadAvatar(
+            @RequestParam("file") MultipartFile file) {
+
+        return ApiResponse.ok(
+                avatarService.upload(file));
+    }
+
+    @PostMapping
+    @PreAuthorize("hasAuthority('user:add')")
+    public ApiResponse<Long> add(
+            @Valid @RequestBody UserRequest userRequest) {
+
+        return ApiResponse.ok(userService.add(userRequest));
+    }
+
+    @GetMapping("/page")
+    public ApiResponse<PageResult<UserPageResponse>> page(
+            @RequestParam(defaultValue = "1")
+            long current,
+
+            @RequestParam(defaultValue = "10")
+            long size,
+
+            @RequestParam(required = false)
+            String account,
+
+            @RequestParam(required = false)
+            Long orgId) {
+
+        return ApiResponse.ok(
+                userService.page(
+                        current,
+                        size,
+                        account,
+                        orgId));
     }
 }

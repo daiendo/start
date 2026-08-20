@@ -1,18 +1,17 @@
 package com.daiend.muriox.user;
 
-import java.time.OffsetDateTime;
-
-import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.daiend.muriox.common.persistence.BaseRemarkEntity;
+
+import java.time.LocalDateTime;
 
 @TableName("sys_user")
 public class User extends BaseRemarkEntity {
     @TableId(type = IdType.AUTO)
     private Long id;
+    private Long orgId;
     private String account;
     private String username;
     private String avatar;
@@ -21,6 +20,9 @@ public class User extends BaseRemarkEntity {
     private Boolean enabled;
     private String email;
     private String mobile;
+    private Boolean builtIn;
+    private Boolean mustChangePassword;
+    private LocalDateTime passwordChangedAt;
 
     public Long getId() {
         return id;
@@ -28,6 +30,14 @@ public class User extends BaseRemarkEntity {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getOrgId() {
+        return orgId;
+    }
+
+    public void setOrgId(Long orgId) {
+        this.orgId = orgId;
     }
 
     public String getUsername() {
@@ -93,4 +103,29 @@ public class User extends BaseRemarkEntity {
     public void setMobile(String mobile) {
         this.mobile = mobile;
     }
+
+    public Boolean getBuiltIn() {
+        return builtIn;
+    }
+
+    public void setBuiltIn(Boolean builtIn) {
+        this.builtIn = builtIn;
+    }
+
+    public Boolean getMustChangePassword() {
+        return mustChangePassword;
+    }
+
+    public void setMustChangePassword(Boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
+    }
+
+    public LocalDateTime getPasswordChangedAt() {
+        return passwordChangedAt;
+    }
+
+    public void setPasswordChangedAt(LocalDateTime passwordChangedAt) {
+        this.passwordChangedAt = passwordChangedAt;
+    }
+
 }

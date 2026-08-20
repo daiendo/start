@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.daiend.muriox.common.persistence.BaseRemarkEntity;
 
 
-@TableName("sys_organization")
+@TableName("sys_organize")
 public class Organize extends BaseRemarkEntity {
     @TableId(type = IdType.AUTO)
     private Long id;
