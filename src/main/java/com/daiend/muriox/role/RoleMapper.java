@@ -74,11 +74,11 @@ public interface RoleMapper extends BaseMapper<Role> {
     }
 
     @Select("""
-        SELECT DISTINCT user_role.user_id
-        FROM sys_user_role user_role
-        WHERE user_role.role_id = #{roleId}
-        ORDER BY user_role.user_id
-        """)
+            SELECT DISTINCT user_role.user_id
+            FROM sys_user_role user_role
+            WHERE user_role.role_id = #{roleId}
+            ORDER BY user_role.user_id
+            """)
     List<Long> findUserIdsByRoleId(
             @Param("roleId") Long roleId);
 
@@ -118,10 +118,21 @@ public interface RoleMapper extends BaseMapper<Role> {
     int insertRoleResources(
             @Param("roleId") Long roleId,
             @Param("resourceIds") Collection<Long> resourceIds);
+
     int deleteUsersByRoleId(
             @Param("roleId") Long roleId);
 
     int insertRoleUsers(
             @Param("roleId") Long roleId,
             @Param("userIds") Collection<Long> userIds);
+
+    List<Long> findRoleIdsByUserId(
+            @Param("userId") Long userId);
+
+    int deleteRolesByUserId(
+            @Param("userId") Long userId);
+
+    int insertUserRoles(
+            @Param("userId") Long userId,
+            @Param("roleIds") Collection<Long> roleIds);
 }

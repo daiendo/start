@@ -77,4 +77,140 @@
         user_info.created_at DESC,
         user_info.id DESC
     </select>
+
+    <select
+            id="selectUserDetail"
+            resultType="com.daiend.muriox.user.UserDetailRow">
+
+        SELECT
+        user_info.id,
+        user_info.account,
+        user_info.username,
+        user_info.org_id,
+        organize.name AS org_name,
+        user_info.avatar,
+        user_info.sex,
+        user_info.email,
+        user_info.mobile,
+        user_info.enabled,
+        user_info.built_in,
+        user_info.remark,
+        user_info.created_at,
+        user_info.updated_at
+
+        FROM sys_user user_info
+
+        LEFT JOIN sys_organize organize
+        ON organize.id = user_info.org_id
+
+        WHERE user_info.id = #{id}
+    </select>
+
+    <select
+            id="selectUserPosts"
+            resultType="com.daiend.muriox.user.UserPostRow">
+
+        SELECT
+        post_info.id AS post_id,
+        post_info.name AS post_name
+
+        FROM sys_user_post user_post
+
+        JOIN sys_post post_info
+        ON post_info.id = user_post.post_id
+
+        WHERE user_post.user_id = #{userId}
+
+        ORDER BY
+        post_info.sort_order,
+        post_info.id
+    </select>
+
+    <delete id="deleteUserPosts">
+        DELETE FROM sys_user_post
+        WHERE user_id = #{userId}
+    </delete>
+
+    <select
+            id="findPostIdsByUserId"
+            resultType="java.lang.Long">
+
+        SELECT post_id
+        FROM sys_user_post
+        WHERE user_id = #{userId}
+    </select>
+
+    <select
+            id="existsEnabledRoleByUserId"
+            resultType="java.lang.Boolean">
+
+        SELECT EXISTS (
+        SELECT 1
+        FROM sys_user_role user_role
+        JOIN sys_role role_info
+        ON role_info.id = user_role.role_id
+        WHERE user_role.user_id = #{userId}
+        AND role_info.status = TRUE
+        )
+    </select>
+
+    <delete id="deleteUserPostsByUserIds">
+        DELETE FROM sys_user_post
+        WHERE user_id IN
+        <foreach
+                collection="userIds"
+                item="userId"
+                open="("
+                separator=","
+                close=")">
+            #{userId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteUserRolesByUserIds">
+        DELETE FROM sys_user_role
+        WHERE user_id IN
+        <foreach
+                collection="userIds"
+                item="userId"
+                open="("
+                separator=","
+                close=")">
+            #{userId}
+        </foreach>
+    </delete>
+    <select
+            id="findEnabledUserIdsWithoutEnabledRole"
+            resultType="java.lang.Long">
+
+        SELECT user_info.id
+        FROM sys_user user_info
+
+        WHERE user_info.id IN
+        <foreach
+                collection="userIds"
+                item="userId"
+                open="("
+                separator=","
+                close=")">
+            #{userId}
+        </foreach>
+
+        AND user_info.enabled = TRUE
+
+        AND NOT EXISTS (
+        SELECT 1
+        FROM sys_user_role user_role
+
+        JOIN sys_role role_info
+        ON role_info.id = user_role.role_id
+
+        WHERE user_role.user_id =
+        user_info.id
+
+        AND role_info.status = TRUE
+        )
+
+        ORDER BY user_info.id
+    </select>
 </mapper>

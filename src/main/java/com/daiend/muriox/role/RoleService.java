@@ -362,7 +362,6 @@ public class RoleService {
     }
 
 
-
     @Transactional
     public void configureUsers(
             RoleUserRequest request) {
@@ -392,16 +391,6 @@ public class RoleService {
                     "部分用户不存在");
         }
 
-        boolean containsDisabledUser =
-                users.stream()
-                        .anyMatch(user ->
-                                !Boolean.TRUE.equals(
-                                        user.getEnabled()));
-
-        if (containsDisabledUser) {
-            throw new BusinessException(
-                    "不能向已禁用用户授权角色");
-        }
 
         /*
          * 被移除角色的旧用户和新授权用户都需要
@@ -410,6 +399,44 @@ public class RoleService {
         List<Long> oldUserIds =
                 roleMapper.findUserIdsByRoleId(
                         role.getId());
+
+        Set<Long> oldUserIdSet =
+                new HashSet<>(oldUserIds);
+
+        Set<Long> requestedUserIdSet =
+                new HashSet<>(userIds);
+
+        /*
+         * 只检查角色成员关系真正发生变化的用户。
+         * 仍然保留在该角色中的内置用户不受影响。
+         */
+        List<Long> membershipChangedUserIds =
+                java.util.stream.Stream.concat(
+                                oldUserIds.stream(),
+                                userIds.stream())
+                        .filter(userId ->
+                                oldUserIdSet.contains(userId)
+                                        != requestedUserIdSet.contains(
+                                        userId))
+                        .distinct()
+                        .toList();
+
+        List<User> membershipChangedUsers =
+                membershipChangedUserIds.isEmpty()
+                        ? List.of()
+                        : userMapper.selectByIds(
+                        membershipChangedUserIds);
+
+        boolean containsBuiltInUser =
+                membershipChangedUsers.stream()
+                        .anyMatch(user ->
+                                Boolean.TRUE.equals(
+                                        user.getBuiltIn()));
+
+        if (containsBuiltInUser) {
+            throw new BusinessException(
+                    "系统内置用户的角色归属不能修改");
+        }
 
         List<Long> affectedUserIds =
                 java.util.stream.Stream.concat(
@@ -430,6 +457,18 @@ public class RoleService {
             if (insertedRows != userIds.size()) {
                 throw new BusinessException(
                         "角色用户授权失败");
+            }
+        }
+
+        if (!affectedUserIds.isEmpty()) {
+            List<Long> invalidUserIds =
+                    userMapper
+                            .findEnabledUserIdsWithoutEnabledRole(
+                                    affectedUserIds);
+
+            if (!invalidUserIds.isEmpty()) {
+                throw new BusinessException(
+                        "启用中的用户必须至少保留一个启用角色");
             }
         }
 
@@ -503,4 +542,5 @@ public class RoleService {
                     "系统内置角色的状态不能修改");
         }
     }
+
 }

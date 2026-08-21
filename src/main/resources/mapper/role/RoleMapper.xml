@@ -86,5 +86,34 @@
             )
         </foreach>
     </insert>
+    <select
+            id="findRoleIdsByUserId"
+            resultType="java.lang.Long">
+        SELECT role_id
+        FROM sys_user_role
+        WHERE user_id = #{userId}
+        ORDER BY role_id
+    </select>
 
+    <delete id="deleteRolesByUserId">
+        DELETE FROM sys_user_role
+        WHERE user_id = #{userId}
+    </delete>
+
+    <insert id="insertUserRoles">
+        INSERT INTO sys_user_role (
+        user_id,
+        role_id
+        )
+        VALUES
+        <foreach
+                collection="roleIds"
+                item="roleId"
+                separator=",">
+            (
+            #{userId},
+            #{roleId}
+            )
+        </foreach>
+    </insert>
 </mapper>

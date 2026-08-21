@@ -1,11 +1,10 @@
 package com.daiend.muriox.auth;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import com.daiend.muriox.common.exception.BusinessException;
 import com.daiend.muriox.user.User;
 import com.daiend.muriox.user.UserMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
@@ -42,14 +41,29 @@ public class AuthService {
             throw new BusinessException("账号已被禁用");
         }
 
-        IssuedToken issuedToken = tokenService.createToken(user.getId());
-        return new LoginResponse(issuedToken.token(),
-                issuedToken.expiresInSeconds());
+
+        boolean mustChangePassword =
+                Boolean.TRUE.equals(
+                        user.getMustChangePassword());
+
+        IssuedToken issuedToken =
+                tokenService.createToken(
+                        user.getId(),
+                        mustChangePassword);
+        return new LoginResponse(
+                issuedToken.token(),
+                issuedToken.expiresInSeconds(),
+                mustChangePassword);
 
     }
 
-    public void logout(String sessionId) {
-        tokenService.revokeSession(sessionId);
+    public void logout(
+            Long userId,
+            String sessionId) {
+
+        tokenService.revokeSession(
+                userId,
+                sessionId);
     }
 
 }

@@ -1,16 +1,10 @@
 package com.daiend.muriox.auth;
 
-import io.swagger.v3.oas.annotations.security.SecurityRequirements;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.daiend.muriox.common.ApiResponse;
-
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/authority/auth")
@@ -34,9 +28,16 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ApiResponse<Void> logout(@AuthenticationPrincipal CurrentUser currentUser) {
-        authService.logout(currentUser.sessionId());
-        return ApiResponse.okMessage("注销成功");
+    public ApiResponse<Void> logout(
+            @AuthenticationPrincipal
+            CurrentUser currentUser) {
+
+        authService.logout(
+                currentUser.id(),
+                currentUser.sessionId());
+
+        return ApiResponse.okMessage(
+                "注销成功");
     }
 
 }

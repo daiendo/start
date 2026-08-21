@@ -1,11 +1,10 @@
 package com.daiend.muriox.profile;
 
+import com.daiend.muriox.auth.CurrentUser;
+import com.daiend.muriox.common.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import com.daiend.muriox.auth.CurrentUser;
-import com.daiend.muriox.common.ApiResponse;
 
 @RestController
 @RequestMapping("/api/authority/profile")
@@ -30,6 +29,7 @@ public class ProfileController {
             @Valid @RequestBody ChangePassRequest changePassRequest
     ) {
         profileService.changePassword(currentUser.id(), changePassRequest);
-        return ApiResponse.okMessage("修改成功");
+        return ApiResponse.okMessage(
+                "密码修改成功，请重新登录");
     }
 }
