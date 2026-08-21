@@ -1,8 +1,10 @@
 package com.daiend.muriox.organize;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.daiend.muriox.common.PageResult;
 import com.daiend.muriox.common.exception.BusinessException;
+import com.daiend.muriox.datascope.DataScopeGuard;
+import com.daiend.muriox.datascope.UserDataScope;
+import com.daiend.muriox.datascope.UserDataScopeService;
 import com.daiend.muriox.post.PostMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,13 +17,28 @@ public class OrganizeService {
 
     private final OrganizeMapper organizeMapper;
     private final PostMapper postMapper;
+    private final OrganizeHierarchyChangePublisher hierarchyChangePublisher;
+    private final UserDataScopeService dataScopeService;
+    private final DataScopeGuard dataScopeGuard;
 
-    public OrganizeService(OrganizeMapper organizeMapper, PostMapper postMapper) {
+    public OrganizeService(
+            OrganizeMapper organizeMapper,
+            PostMapper postMapper,
+            OrganizeHierarchyChangePublisher hierarchyChangePublisher,
+            UserDataScopeService dataScopeService,
+            DataScopeGuard dataScopeGuard) {
         this.organizeMapper = organizeMapper;
         this.postMapper = postMapper;
+        this.hierarchyChangePublisher = hierarchyChangePublisher;
+        this.dataScopeService = dataScopeService;
+        this.dataScopeGuard = dataScopeGuard;
     }
 
-    public PageResult<OrganizeTreeItem> treePage(long current, long size, String organizeName) {
+    public PageResult<OrganizeTreeItem> treePage(
+            long current,
+            long size,
+            String organizeName,
+            Long userId) {
         if (current < 1) {
             throw new BusinessException("当前页必须大于等于 1");
         }
@@ -29,70 +46,31 @@ public class OrganizeService {
         if (size < 1 || size > 100) {
             throw new BusinessException("每页数量必须在 1 到 100 之间");
         }
-        if (organizeName != null && !organizeName.isBlank()) {
-            return searchTreePage(
-                    current,
-                    size,
-                    organizeName.trim());
+        VisibleOrganizes visible = loadVisibleOrganizes(userId);
+        List<OrganizeTreeItem> roots = buildTree(visible);
+
+        if (organizeName != null
+                && !organizeName.isBlank()) {
+            String keyword = organizeName.trim()
+                    .toLowerCase(Locale.ROOT);
+            roots = roots.stream()
+                    .map(root -> filterTreeItem(root, keyword))
+                    .flatMap(Optional::stream)
+                    .toList();
         }
 
-        Page<Organize> rootPage = organizeMapper.selectRootOrganizePage(current, size);
-        if (rootPage.getRecords().isEmpty()) {
-            return new PageResult<>(
-                    List.of(),
-                    rootPage.getTotal(),
-                    rootPage.getCurrent(),
-                    rootPage.getSize(),
-                    rootPage.getPages()
-            );
-        }
-        List<Organize> allOrganizes = organizeMapper.findAllOrganize();
-
-        Map<Long, List<Organize>> childrenByParentId = allOrganizes
-                .stream()
-                .filter(organize -> organize.getParentId() != null)
-                .collect(Collectors.groupingBy(Organize::getParentId));
-
-        List<OrganizeTreeItem> records = rootPage.getRecords()
-                .stream()
-                .map(organize -> convertToTreeItem(
-                        organize,
-                        childrenByParentId,
-                        new HashSet<>()
-                )).toList();
-
-        return new PageResult<>(
-                records,
-                rootPage.getTotal(),
-                rootPage.getCurrent(),
-                rootPage.getSize(),
-                rootPage.getPages()
-        );
+        return paginateTreeItems(roots, current, size);
     }
 
 
-    public List<OrganizeTreeItem> tree() {
-
-        List<Organize> organizes = organizeMapper.findAllOrganize();
-        Map<Long, List<Organize>> childrenByParentId = organizes
-                .stream()
-                .filter(organize -> organize.getParentId() != null)
-                .collect(Collectors.groupingBy(Organize::getParentId));
-        return organizes
-                .stream()
-                .filter(organize -> organize.getParentId() == null)
-                .map(organize -> convertToTreeItem(
-                        organize,
-                        childrenByParentId,
-                        new HashSet<>()
-                ))
-                .toList();
-
+    public List<OrganizeTreeItem> tree(Long userId) {
+        return buildTree(loadVisibleOrganizes(userId));
     }
 
     @Transactional
     public Long addOrganize(OrganizeRequest request) {
         OrganizeValue values = toOrganizeValue(request);
+        assertParentWritable(values.parentId());
         validateOrganizeForCreate(values);
 
         Organize organize = new Organize();
@@ -101,6 +79,7 @@ public class OrganizeService {
         if (organizeMapper.insert(organize) != 1) {
             throw new BusinessException("新增组织失败");
         }
+        hierarchyChangePublisher.publish();
         return organize.getId();
     }
 
@@ -126,15 +105,25 @@ public class OrganizeService {
     @Transactional
     public Long updateOrganize(OrganizeUpdateRequest request) {
         Organize organize = findOrganizeOrThrow(request.id());
+        dataScopeGuard.assertOrgAllowed(organize.getId());
 
         OrganizeValue organizeValue = toOrganizeValue(request);
+        assertParentWritable(organizeValue.parentId());
         validateOrganizeForUpdate(organize, organizeValue);
+        boolean hierarchyChanged =
+                !Objects.equals(
+                        organize.getParentId(),
+                        organizeValue.parentId());
         applyOrganizeValue(organize, organizeValue);
         int affectedRows = organizeMapper.updateById(organize);
 
         if (affectedRows != 1) {
             throw new BusinessException("编辑组织失败");
         }
+        if (hierarchyChanged) {
+            hierarchyChangePublisher.publish();
+        }
+
         return organize.getId();
 
     }
@@ -146,6 +135,10 @@ public class OrganizeService {
         if (organizes.size() != normalizeDeleteIds.size()) {
             throw new BusinessException("部分组织不存在");
         }
+        dataScopeGuard.assertAllOrgsAllowed(
+                organizes.stream()
+                        .map(Organize::getId)
+                        .toList());
         if (organizeMapper.hasChildrenByParentIds(normalizeDeleteIds)) {
             throw new BusinessException(
                     "待删除组织仍有子组织，请先删除子组织");
@@ -159,49 +152,39 @@ public class OrganizeService {
             throw new BusinessException(
                     "删除组织失败");
         }
-
+        hierarchyChangePublisher.publish();
 
     }
 
-    private PageResult<OrganizeTreeItem> searchTreePage(long current,
-                                                        long size,
-                                                        String keyword) {
-        List<Organize> allOrganizes = organizeMapper.findAllOrganize();
-        Map<Long, List<Organize>> childrenByParentId = allOrganizes.stream()
-                .filter(organize -> organize.getParentId() != null).collect(Collectors.groupingBy(Organize::getParentId));
+    private Optional<OrganizeTreeItem> filterTreeItem(
+            OrganizeTreeItem item,
+            String normalizedKeyword) {
 
-        String normalizedKeyword =
-                keyword.toLowerCase(Locale.ROOT);
-        List<OrganizeTreeItem> matchedRoots = allOrganizes.stream()
-                .filter(organize -> organize.getParentId() == null)
-                .map(organize -> filterTreeItem(organize, childrenByParentId, normalizedKeyword, new HashSet<>()))
-                .flatMap(Optional::stream)
-                .toList();
-
-        return paginateTreeItems(matchedRoots, current, size);
-    }
-
-    private Optional<OrganizeTreeItem> filterTreeItem(Organize organize, Map<Long, List<Organize>> childrenByParentId, String normalizedKeyword, Set<Long> ancestorIds) {
-        if (!ancestorIds.add(organize.getId())) {
-            throw new BusinessException("组织层级存在循环");
-        }
-        List<OrganizeTreeItem> matchedChildren = childrenByParentId.getOrDefault(organize.getId(), List.of())
+        List<OrganizeTreeItem> matchedChildren = item.children()
                 .stream()
                 .map(child -> filterTreeItem(
                         child,
-                        childrenByParentId,
-                        normalizedKeyword,
-                        new HashSet<>(ancestorIds)
-                ))
+                        normalizedKeyword))
                 .flatMap(Optional::stream)
                 .toList();
 
-        boolean currentMatched = containsIgnoreCase(organize.getName(), normalizedKeyword);
+        boolean currentMatched = containsIgnoreCase(
+                item.name(), normalizedKeyword);
 
         if (!currentMatched && matchedChildren.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(createTreeItem(organize, matchedChildren));
+        return Optional.of(new OrganizeTreeItem(
+                item.id(),
+                item.name(),
+                item.parentId(),
+                item.status(),
+                item.sortOrder(),
+                item.remark(),
+                item.createdAt(),
+                item.updatedAt(),
+                item.dataAllowed(),
+                matchedChildren));
     }
 
     private boolean containsIgnoreCase(
@@ -211,20 +194,6 @@ public class OrganizeService {
         return value != null
                 && value.toLowerCase(Locale.ROOT)
                 .contains(normalizedKeyword);
-    }
-
-    private OrganizeTreeItem createTreeItem(Organize organize, List<OrganizeTreeItem> children) {
-        return new OrganizeTreeItem(
-                organize.getId(),
-                organize.getName(),
-                organize.getParentId(),
-                organize.getStatus(),
-                organize.getSortOrder(),
-                organize.getRemark(),
-                organize.getCreatedAt(),
-                organize.getUpdatedAt(),
-                children
-        );
     }
 
     private PageResult<OrganizeTreeItem> paginateTreeItems(
@@ -264,7 +233,38 @@ public class OrganizeService {
                 pages);
     }
 
-    private OrganizeTreeItem convertToTreeItem(Organize organize, Map<Long, List<Organize>> childrenByParentId, Set<Long> ancestorIds) {
+    private List<OrganizeTreeItem> buildTree(
+            VisibleOrganizes visible) {
+
+        Set<Long> visibleIds = visible.organizes()
+                .stream()
+                .map(Organize::getId)
+                .collect(Collectors.toSet());
+        Map<Long, List<Organize>> childrenByParentId =
+                visible.organizes().stream()
+                        .filter(organize ->
+                                organize.getParentId() != null)
+                        .collect(Collectors.groupingBy(
+                                Organize::getParentId));
+
+        return visible.organizes().stream()
+                .filter(organize ->
+                        organize.getParentId() == null
+                                || !visibleIds.contains(
+                                organize.getParentId()))
+                .map(organize -> convertToTreeItem(
+                        organize,
+                        childrenByParentId,
+                        visible.allowedOrgIds(),
+                        new HashSet<>()))
+                .toList();
+    }
+
+    private OrganizeTreeItem convertToTreeItem(
+            Organize organize,
+            Map<Long, List<Organize>> childrenByParentId,
+            Set<Long> allowedOrgIds,
+            Set<Long> ancestorIds) {
         if (!ancestorIds.add(organize.getId())) {
             throw new BusinessException("组织层级存在循环");
         }
@@ -274,6 +274,7 @@ public class OrganizeService {
                 .map(child -> convertToTreeItem(
                         child,
                         childrenByParentId,
+                        allowedOrgIds,
                         new HashSet<>(ancestorIds)
                 ))
                 .toList();
@@ -286,8 +287,50 @@ public class OrganizeService {
                 organize.getRemark(),
                 organize.getCreatedAt(),
                 organize.getUpdatedAt(),
+                allowedOrgIds.contains(organize.getId()),
                 children
         );
+    }
+
+    private VisibleOrganizes loadVisibleOrganizes(
+            Long userId) {
+
+        UserDataScope scope =
+                dataScopeService.getDataScope(userId);
+
+        if (scope.all()) {
+            List<Organize> organizes =
+                    organizeMapper.findAllOrganize();
+            Set<Long> allIds = organizes.stream()
+                    .map(Organize::getId)
+                    .collect(Collectors.toSet());
+            return new VisibleOrganizes(organizes, allIds);
+        }
+
+        if (scope.isDenied()) {
+            return new VisibleOrganizes(
+                    List.of(), Set.of());
+        }
+
+        return new VisibleOrganizes(
+                organizeMapper
+                        .findAllowedAndAncestorOrganizes(
+                                scope.orgIds()),
+                Set.copyOf(scope.orgIds()));
+    }
+
+    private void assertParentWritable(Long parentId) {
+        if (parentId == null) {
+            dataScopeGuard.assertAllData();
+            return;
+        }
+
+        dataScopeGuard.assertOrgAllowed(parentId);
+    }
+
+    private record VisibleOrganizes(
+            List<Organize> organizes,
+            Set<Long> allowedOrgIds) {
     }
 
     private record OrganizeValue(
@@ -389,25 +432,14 @@ public class OrganizeService {
             return;
         }
 
-        Set<Long> visitedIds = new HashSet<>();
-        Long currentId = parentId;
+        List<Organize> ancestors = organizeMapper
+                .findAllowedAndAncestorOrganizes(
+                        List.of(parentId));
 
-        while (currentId != null) {
-            if (!visitedIds.add(currentId)) {
-                throw new BusinessException("组织层级存在循环");
-            }
-
-            if (Objects.equals(currentId, organizeId)) {
+        if (ancestors.stream().anyMatch(organize ->
+                Objects.equals(organize.getId(), organizeId))) {
                 throw new BusinessException(
                         "不能选择自身或后代作为上级组织");
-            }
-
-            Organize parent = organizeMapper.selectById(currentId);
-            if (parent == null) {
-                throw new BusinessException("上级组织不存在");
-            }
-
-            currentId = parent.getParentId();
         }
     }
 

@@ -3,6 +3,7 @@ package com.daiend.muriox.post;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.daiend.muriox.common.PageResult;
 import com.daiend.muriox.common.exception.BusinessException;
+import com.daiend.muriox.datascope.DataScopeGuard;
 import com.daiend.muriox.organize.Organize;
 import com.daiend.muriox.organize.OrganizeMapper;
 import org.springframework.stereotype.Service;
@@ -19,10 +20,15 @@ public class PostService {
 
     private final PostMapper postMapper;
     private final OrganizeMapper organizeMapper;
+    private final DataScopeGuard dataScopeGuard;
 
-    public PostService(PostMapper postMapper, OrganizeMapper organizeMapper) {
+    public PostService(
+            PostMapper postMapper,
+            OrganizeMapper organizeMapper,
+            DataScopeGuard dataScopeGuard) {
         this.postMapper = postMapper;
         this.organizeMapper = organizeMapper;
+        this.dataScopeGuard = dataScopeGuard;
     }
 
     public PageResult<PostResponse> page(long current, long size, String name, Long orgId) {
@@ -54,6 +60,7 @@ public class PostService {
         String code = request.code()
                 .trim()
                 .toLowerCase(Locale.ROOT);
+        dataScopeGuard.assertOrgAllowed(orgId);
 
         if (organizeMapper.selectById(orgId) == null) {
             throw new BusinessException("所属组织不存在");
@@ -105,8 +112,10 @@ public class PostService {
     @Transactional
     public Long update(PostUpdateRequest request) {
         Post post = findPostOrThrow(request.id());
+        dataScopeGuard.assertOrgAllowed(post.getOrgId());
 
         Long orgId = request.orgId();
+        dataScopeGuard.assertOrgAllowed(orgId);
         String name = request.name().trim();
         String code = request.code().trim().toLowerCase(Locale.ROOT);
 
@@ -153,6 +162,10 @@ public class PostService {
         if (posts.size() != postIds.size()) {
             throw new BusinessException("部分岗位不存在");
         }
+        dataScopeGuard.assertAllOrgsAllowed(
+                posts.stream()
+                        .map(Post::getOrgId)
+                        .toList());
         int affectedRows = postMapper.deleteByIds(postIds);
 
         if (affectedRows != postIds.size()) {

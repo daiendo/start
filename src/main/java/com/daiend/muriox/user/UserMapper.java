@@ -39,17 +39,14 @@ public interface UserMapper extends BaseMapper<User> {
         return selectList(query);
     }
 
-    default boolean existsByAccount(String account) {
-        return selectCount(Wrappers.<User>lambdaQuery().eq(User::getAccount, account)) > 0;
-    }
+    boolean existsByAccount(
+            @Param("account") String account);
 
-    default boolean existsByEmail(String email) {
-        return selectCount(Wrappers.<User>lambdaQuery().eq(User::getEmail, email)) > 0;
-    }
+    boolean existsByEmail(
+            @Param("email") String email);
 
-    default boolean existsByMobile(String mobile) {
-        return selectCount(Wrappers.<User>lambdaQuery().eq(User::getMobile, mobile)) > 0;
-    }
+    boolean existsByMobile(
+            @Param("mobile") String mobile);
 
     Page<UserPageRow> selectUserPage(
             Page<UserPageRow> page,
@@ -71,38 +68,17 @@ public interface UserMapper extends BaseMapper<User> {
             @Param("userId") Long userId);
 
 
-    default boolean existsByAccountExcludingId(
-            String account,
-            Long excludedId) {
+    boolean existsByAccountExcludingId(
+            @Param("account") String account,
+            @Param("excludedId") Long excludedId);
 
-        return selectCount(
-                Wrappers.<User>lambdaQuery()
-                        .eq(User::getAccount, account)
-                        .ne(User::getId, excludedId)
-        ) > 0;
-    }
+    boolean existsByEmailExcludingId(
+            @Param("email") String email,
+            @Param("excludedId") Long excludedId);
 
-    default boolean existsByEmailExcludingId(
-            String email,
-            Long excludedId) {
-
-        return selectCount(
-                Wrappers.<User>lambdaQuery()
-                        .eq(User::getEmail, email)
-                        .ne(User::getId, excludedId)
-        ) > 0;
-    }
-
-    default boolean existsByMobileExcludingId(
-            String mobile,
-            Long excludedId) {
-
-        return selectCount(
-                Wrappers.<User>lambdaQuery()
-                        .eq(User::getMobile, mobile)
-                        .ne(User::getId, excludedId)
-        ) > 0;
-    }
+    boolean existsByMobileExcludingId(
+            @Param("mobile") String mobile,
+            @Param("excludedId") Long excludedId);
 
     int deleteUserPosts(
             @Param("userId") Long userId);

@@ -2,6 +2,7 @@ package com.daiend.muriox.common.exception;
 
 import com.daiend.muriox.common.ApiResponse;
 import com.daiend.muriox.common.FieldViolation;
+import com.daiend.muriox.datascope.DataScopeAccessDeniedException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,11 +80,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>>
-    handleAccessDeniedException() {
+    handleAccessDeniedException(
+            AccessDeniedException exception) {
 
         return errorResponse(
                 HttpStatus.FORBIDDEN,
-                "权限不足，禁止访问");
+                exception instanceof DataScopeAccessDeniedException
+                        ? exception.getMessage()
+                        : "权限不足，禁止访问");
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
@@ -109,7 +113,7 @@ public class GlobalExceptionHandler {
     handleMaxUploadSizeExceededException() {
 
         return errorResponse(
-                HttpStatus.PAYLOAD_TOO_LARGE,
+                HttpStatus.CONTENT_TOO_LARGE,
                 "上传文件大小超过限制");
     }
 

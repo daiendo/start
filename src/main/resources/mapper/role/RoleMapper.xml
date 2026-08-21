@@ -116,4 +116,27 @@
             )
         </foreach>
     </insert>
+
+    <delete id="deleteDataOrgsByRoleId">
+        DELETE FROM sys_role_data_org
+        WHERE role_id = #{roleId}
+    </delete>
+
+    <insert id="insertRoleDataOrgs">
+        INSERT INTO sys_role_data_org (
+        role_id,
+        org_id
+        )
+        VALUES
+        <foreach
+                collection="orgIds"
+                item="orgId"
+                separator=",">
+            (
+            #{roleId},
+            #{orgId}
+            )
+        </foreach>
+    </insert>
+
 </mapper>

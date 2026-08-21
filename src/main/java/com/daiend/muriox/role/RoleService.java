@@ -4,8 +4,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.daiend.muriox.auth.UserAuthorityChangePublisher;
 import com.daiend.muriox.common.PageResult;
 import com.daiend.muriox.common.exception.BusinessException;
+import com.daiend.muriox.datascope.DataScopeGuard;
+import com.daiend.muriox.datascope.DataScopeAccessDeniedException;
 import com.daiend.muriox.menu.Menu;
 import com.daiend.muriox.menu.MenuMapper;
+import com.daiend.muriox.organize.Organize;
+import com.daiend.muriox.organize.OrganizeMapper;
 import com.daiend.muriox.resource.Resource;
 import com.daiend.muriox.resource.ResourceMapper;
 import com.daiend.muriox.user.User;
@@ -25,13 +29,25 @@ public class RoleService {
     private final MenuMapper menuMapper;
     private final ResourceMapper resourceMapper;
     private final UserMapper userMapper;
+    private final OrganizeMapper organizeMapper;
+    private final DataScopeGuard dataScopeGuard;
 
-    public RoleService(RoleMapper roleMapper, UserAuthorityChangePublisher authorityChangePublisher, MenuMapper menuMapper, ResourceMapper resourceMapper, UserMapper userMapper) {
+    public RoleService(
+            RoleMapper roleMapper,
+            UserAuthorityChangePublisher authorityChangePublisher,
+            MenuMapper menuMapper,
+            ResourceMapper resourceMapper,
+            UserMapper userMapper,
+            OrganizeMapper organizeMapper,
+            DataScopeGuard dataScopeGuard
+    ) {
         this.roleMapper = roleMapper;
         this.authorityChangePublisher = authorityChangePublisher;
         this.menuMapper = menuMapper;
         this.resourceMapper = resourceMapper;
         this.userMapper = userMapper;
+        this.organizeMapper = organizeMapper;
+        this.dataScopeGuard = dataScopeGuard;
     }
 
 
@@ -390,6 +406,10 @@ public class RoleService {
             throw new BusinessException(
                     "部分用户不存在");
         }
+        dataScopeGuard.assertAllOrgsAllowed(
+                users.stream()
+                        .map(User::getOrgId)
+                        .toList());
 
 
         /*
@@ -426,6 +446,17 @@ public class RoleService {
                         ? List.of()
                         : userMapper.selectByIds(
                         membershipChangedUserIds);
+
+        if (membershipChangedUsers.size()
+                != membershipChangedUserIds.size()) {
+            throw new DataScopeAccessDeniedException(
+                    "无权修改部分用户的角色归属");
+        }
+
+        dataScopeGuard.assertAllOrgsAllowed(
+                membershipChangedUsers.stream()
+                        .map(User::getOrgId)
+                        .toList());
 
         boolean containsBuiltInUser =
                 membershipChangedUsers.stream()
@@ -469,6 +500,104 @@ public class RoleService {
             if (!invalidUserIds.isEmpty()) {
                 throw new BusinessException(
                         "启用中的用户必须至少保留一个启用角色");
+            }
+        }
+
+        authorityChangePublisher.publishForUsers(
+                affectedUserIds);
+    }
+
+
+    public RoleDataScopeResponse getDataScope(
+            Long roleId) {
+
+        if (roleId == null || roleId <= 0) {
+            throw new BusinessException(
+                    "角色 ID 不合法");
+        }
+
+        Role role = roleMapper.selectById(roleId);
+
+        if (role == null) {
+            throw new BusinessException(
+                    "角色不存在");
+        }
+
+        List<Long> orgIds =
+                roleMapper.findDataOrgIdsByRoleId(
+                        roleId);
+
+        return new RoleDataScopeResponse(
+                role.getDataScopeType(),
+                orgIds);
+    }
+
+    @Transactional
+    public void configureDataScope(
+            RoleDataScopeRequest request) {
+
+        Role role =
+                roleMapper.selectById(
+                        request.roleId());
+
+        if (role == null) {
+            throw new BusinessException(
+                    "角色不存在");
+        }
+
+        DataScopeType dataScopeType =
+                request.dataScopeType();
+
+        List<Long> orgIds =
+                request.orgIdList()
+                        .stream()
+                        .distinct()
+                        .toList();
+
+        dataScopeGuard.assertCanConfigureRoleDataScope(
+                dataScopeType,
+                orgIds);
+
+        validateBuiltInRoleDataScope(
+                role,
+                dataScopeType,
+                orgIds);
+
+        validateDataScopeOrganizations(
+                dataScopeType,
+                orgIds);
+
+        /*
+         * 必须在更新角色数据范围前查询受影响用户。
+         * 后续 UserAuthorityChangedEvent 将统一清理
+         * 菜单、按钮权限和数据范围缓存。
+         */
+        List<Long> affectedUserIds =
+                roleMapper.findUserIdsByRoleId(
+                        role.getId());
+
+        role.setDataScopeType(dataScopeType);
+
+        int affectedRows =
+                roleMapper.updateById(role);
+
+        if (affectedRows != 1) {
+            throw new BusinessException(
+                    "配置角色数据权限失败");
+        }
+
+        roleMapper.deleteDataOrgsByRoleId(
+                role.getId());
+
+        if (dataScopeType == DataScopeType.CUSTOM_ORG) {
+            int insertedRows =
+                    roleMapper.insertRoleDataOrgs(
+                            role.getId(),
+                            orgIds);
+
+            if (insertedRows != orgIds.size()) {
+                throw new BusinessException(
+                        "配置角色自定义组织失败");
             }
         }
 
@@ -543,4 +672,47 @@ public class RoleService {
         }
     }
 
+    private void validateBuiltInRoleDataScope(
+            Role role,
+            DataScopeType dataScopeType,
+            List<Long> orgIds) {
+
+        if (!Boolean.TRUE.equals(role.getBuiltIn())) {
+            return;
+        }
+
+        if (dataScopeType != DataScopeType.ALL
+                || !orgIds.isEmpty()) {
+
+            throw new BusinessException(
+                    "系统内置角色的数据范围必须为全部数据");
+        }
+    }
+
+    private void validateDataScopeOrganizations(
+            DataScopeType dataScopeType,
+            List<Long> orgIds) {
+
+        if (dataScopeType != DataScopeType.CUSTOM_ORG) {
+            if (!orgIds.isEmpty()) {
+                throw new BusinessException(
+                        "非自定义数据范围不能配置组织");
+            }
+
+            return;
+        }
+
+        if (orgIds.isEmpty()) {
+            throw new BusinessException(
+                    "自定义数据范围必须至少选择一个组织");
+        }
+
+        List<Organize> organizes =
+                organizeMapper.selectByIds(orgIds);
+
+        if (organizes.size() != orgIds.size()) {
+            throw new BusinessException(
+                    "部分自定义组织不存在");
+        }
+    }
 }

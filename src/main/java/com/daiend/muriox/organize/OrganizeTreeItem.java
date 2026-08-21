@@ -12,6 +12,7 @@ public record OrganizeTreeItem(
         String remark,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,
+        Boolean dataAllowed,
         List<OrganizeTreeItem> children
 
 ) {

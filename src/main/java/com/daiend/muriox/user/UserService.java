@@ -5,6 +5,7 @@ import com.daiend.muriox.auth.UserAuthorityChangePublisher;
 import com.daiend.muriox.auth.UserSessionRevocationPublisher;
 import com.daiend.muriox.common.PageResult;
 import com.daiend.muriox.common.exception.BusinessException;
+import com.daiend.muriox.datascope.DataScopeGuard;
 import com.daiend.muriox.organize.OrganizeMapper;
 import com.daiend.muriox.post.Post;
 import com.daiend.muriox.post.PostMapper;
@@ -32,6 +33,7 @@ public class UserService {
     private final TemporaryPasswordGenerator temporaryPasswordGenerator;
 
     private final UserSessionRevocationPublisher sessionRevocationPublisher;
+    private final DataScopeGuard dataScopeGuard;
 
     public UserService(
             UserMapper userMapper,
@@ -41,7 +43,8 @@ public class UserService {
             ObjectStorageService objectStorageService,
             UserAuthorityChangePublisher authorityChangePublisher,
             TemporaryPasswordGenerator temporaryPasswordGenerator,
-            UserSessionRevocationPublisher sessionRevocationPublisher) {
+            UserSessionRevocationPublisher sessionRevocationPublisher,
+            DataScopeGuard dataScopeGuard) {
         this.userMapper = userMapper;
         this.organizeMapper = organizeMapper;
         this.postMapper = postMapper;
@@ -50,6 +53,7 @@ public class UserService {
         this.authorityChangePublisher = authorityChangePublisher;
         this.temporaryPasswordGenerator = temporaryPasswordGenerator;
         this.sessionRevocationPublisher = sessionRevocationPublisher;
+        this.dataScopeGuard = dataScopeGuard;
     }
 
     public List<UserListResponse> getUsers(
@@ -73,6 +77,7 @@ public class UserService {
 
         String mobile = normalizeOptional(request.mobile());
         Long orgId = request.orgId();
+        dataScopeGuard.assertOrgAllowed(orgId);
 
         List<Long> postIds = request.postIds()
                 .stream()
@@ -178,6 +183,8 @@ public class UserService {
             throw new BusinessException(
                     "用户不存在");
         }
+        dataScopeGuard.assertOrgAllowed(
+                user.orgId());
 
         List<UserPostRow> posts =
                 userMapper.selectUserPosts(id);
@@ -221,6 +228,8 @@ public class UserService {
             throw new BusinessException(
                     "用户不存在");
         }
+        dataScopeGuard.assertOrgAllowed(
+                user.getOrgId());
 
         String account = request.account().trim();
         String username = request.username().trim();
@@ -232,6 +241,7 @@ public class UserService {
 
         String mobile = normalizeOptional(request.mobile());
         Long orgId = request.orgId();
+        dataScopeGuard.assertOrgAllowed(orgId);
 
         List<Long> postIds =
                 request.postIds()
@@ -367,6 +377,8 @@ public class UserService {
             throw new BusinessException(
                     "用户不存在");
         }
+        dataScopeGuard.assertOrgAllowed(
+                user.getOrgId());
 
         if (Boolean.TRUE.equals(
                 user.getBuiltIn())) {
@@ -469,6 +481,8 @@ public class UserService {
             throw new BusinessException(
                     "用户不存在");
         }
+        dataScopeGuard.assertOrgAllowed(
+                user.getOrgId());
 
         if (Boolean.TRUE.equals(
                 user.getBuiltIn())
@@ -552,6 +566,10 @@ public class UserService {
             throw new BusinessException(
                     "部分用户不存在");
         }
+        dataScopeGuard.assertAllOrgsAllowed(
+                users.stream()
+                        .map(User::getOrgId)
+                        .toList());
 
         boolean containsBuiltInUser =
                 users.stream()

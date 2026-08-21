@@ -5,6 +5,45 @@
 
 <mapper namespace="com.daiend.muriox.user.UserMapper">
 
+    <select id="existsByAccount" resultType="boolean">
+        SELECT EXISTS (
+        SELECT 1 FROM sys_user WHERE account = #{account}
+        )
+    </select>
+
+    <select id="existsByEmail" resultType="boolean">
+        SELECT EXISTS (
+        SELECT 1 FROM sys_user WHERE LOWER(email) = LOWER(#{email})
+        )
+    </select>
+
+    <select id="existsByMobile" resultType="boolean">
+        SELECT EXISTS (
+        SELECT 1 FROM sys_user WHERE mobile = #{mobile}
+        )
+    </select>
+
+    <select id="existsByAccountExcludingId" resultType="boolean">
+        SELECT EXISTS (
+        SELECT 1 FROM sys_user
+        WHERE account = #{account} AND id != #{excludedId}
+        )
+    </select>
+
+    <select id="existsByEmailExcludingId" resultType="boolean">
+        SELECT EXISTS (
+        SELECT 1 FROM sys_user
+        WHERE LOWER(email) = LOWER(#{email}) AND id != #{excludedId}
+        )
+    </select>
+
+    <select id="existsByMobileExcludingId" resultType="boolean">
+        SELECT EXISTS (
+        SELECT 1 FROM sys_user
+        WHERE mobile = #{mobile} AND id != #{excludedId}
+        )
+    </select>
+
     <insert id="insertUserPosts">
         INSERT INTO sys_user_post (
         user_id,

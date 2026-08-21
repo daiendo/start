@@ -12,6 +12,7 @@ public class Role extends BaseRemarkEntity {
     private String code;
     private String name;
     private Boolean builtIn;
+    private DataScopeType dataScopeType = DataScopeType.CURRENT_ORG;
     private Boolean status;
     private Integer sortOrder;
 
@@ -39,13 +40,20 @@ public class Role extends BaseRemarkEntity {
         this.name = name;
     }
 
-
     public Boolean getBuiltIn() {
         return builtIn;
     }
 
     public void setBuiltIn(Boolean builtIn) {
         this.builtIn = builtIn;
+    }
+
+    public DataScopeType getDataScopeType() {
+        return dataScopeType;
+    }
+
+    public void setDataScopeType(DataScopeType dataScopeType) {
+        this.dataScopeType = dataScopeType;
     }
 
     public Boolean getStatus() {

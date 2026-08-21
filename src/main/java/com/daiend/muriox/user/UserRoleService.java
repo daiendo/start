@@ -3,6 +3,7 @@ package com.daiend.muriox.user;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.daiend.muriox.auth.UserAuthorityChangePublisher;
 import com.daiend.muriox.common.exception.BusinessException;
+import com.daiend.muriox.datascope.DataScopeGuard;
 import com.daiend.muriox.role.Role;
 import com.daiend.muriox.role.RoleMapper;
 import org.springframework.stereotype.Service;
@@ -17,17 +18,20 @@ public class UserRoleService {
     private final RoleMapper roleMapper;
     private final UserAuthorityChangePublisher
             authorityChangePublisher;
+    private final DataScopeGuard dataScopeGuard;
 
     public UserRoleService(
             UserMapper userMapper,
             RoleMapper roleMapper,
             UserAuthorityChangePublisher
-                    authorityChangePublisher) {
+                    authorityChangePublisher,
+            DataScopeGuard dataScopeGuard) {
 
         this.userMapper = userMapper;
         this.roleMapper = roleMapper;
         this.authorityChangePublisher =
                 authorityChangePublisher;
+        this.dataScopeGuard = dataScopeGuard;
     }
 
     public UserRoleConfigResponse getConfig(
@@ -81,6 +85,8 @@ public class UserRoleService {
             throw new BusinessException(
                     "用户不存在");
         }
+        dataScopeGuard.assertOrgAllowed(
+                user.getOrgId());
 
         if (Boolean.TRUE.equals(
                 user.getBuiltIn())) {

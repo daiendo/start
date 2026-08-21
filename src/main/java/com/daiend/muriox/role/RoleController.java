@@ -68,8 +68,6 @@ public class RoleController {
     }
 
     @GetMapping("/authority/{roleId}")
-    @PreAuthorize(
-            "hasAuthority('role:config:authority')")
     public ApiResponse<RoleAuthorityResponse> getAuthority(
             @PathVariable Long roleId) {
 
@@ -108,5 +106,26 @@ public class RoleController {
 
         return ApiResponse.okMessage(
                 "角色用户授权成功");
+    }
+
+    @GetMapping("/dataScope/{roleId}")
+    public ApiResponse<RoleDataScopeResponse> getDataScope(
+            @PathVariable Long roleId) {
+
+        return ApiResponse.ok(
+                roleService.getDataScope(roleId));
+    }
+
+    @PutMapping("/dataScope")
+    @PreAuthorize(
+            "hasAuthority('role:config:data-scope')")
+    public ApiResponse<Void> configureDataScope(
+            @Valid @RequestBody
+            RoleDataScopeRequest request) {
+
+        roleService.configureDataScope(request);
+
+        return ApiResponse.okMessage(
+                "配置角色数据权限成功");
     }
 }

@@ -2,7 +2,9 @@ package com.daiend.muriox.organize;
 
 import com.daiend.muriox.common.ApiResponse;
 import com.daiend.muriox.common.PageResult;
+import com.daiend.muriox.auth.CurrentUser;
 import jakarta.validation.Valid;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,13 +23,17 @@ public class OrganizeController {
     public ApiResponse<PageResult<OrganizeTreeItem>> treePage(
             @RequestParam(defaultValue = "1") long current,
             @RequestParam(defaultValue = "10") long size,
-            @RequestParam(required = false) String name) {
-        return ApiResponse.ok(organizeService.treePage(current, size, name));
+            @RequestParam(required = false) String name,
+            @AuthenticationPrincipal CurrentUser currentUser) {
+        return ApiResponse.ok(organizeService.treePage(
+                current, size, name, currentUser.id()));
     }
 
     @GetMapping("/tree")
-    public ApiResponse<List<OrganizeTreeItem>> tree() {
-        return ApiResponse.ok(organizeService.tree());
+    public ApiResponse<List<OrganizeTreeItem>> tree(
+            @AuthenticationPrincipal CurrentUser currentUser) {
+        return ApiResponse.ok(
+                organizeService.tree(currentUser.id()));
     }
 
     @PostMapping

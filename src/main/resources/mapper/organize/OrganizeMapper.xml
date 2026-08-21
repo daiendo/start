@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.daiend.muriox.organize.OrganizeMapper">
+
+    <select id="existsByNameAndParentId" resultType="boolean">
+        SELECT EXISTS (
+        SELECT 1
+        FROM sys_organize
+        WHERE name = #{name}
+        AND parent_id IS NOT DISTINCT FROM #{parentId}
+        )
+    </select>
+
+    <select id="existsByNameAndParentIdExcludingId" resultType="boolean">
+        SELECT EXISTS (
+        SELECT 1
+        FROM sys_organize
+        WHERE name = #{name}
+        AND parent_id IS NOT DISTINCT FROM #{parentId}
+        AND id != #{excludedId}
+        )
+    </select>
+
+    <select id="hasChildrenByParentIds" resultType="boolean">
+        SELECT EXISTS (
+        SELECT 1
+        FROM sys_organize
+        WHERE parent_id IN
+        <foreach
+                collection="organizeIds"
+                item="organizeId"
+                open="("
+                separator=","
+                close=")">
+            #{organizeId}
+        </foreach>
+        )
+    </select>
+
+    <select
+            id="findAllowedAndAncestorOrganizes"
+            resultType="com.daiend.muriox.organize.Organize">
+
+        WITH RECURSIVE visible_organize AS (
+        SELECT organize_info.*
+        FROM sys_organize organize_info
+        WHERE organize_info.id IN
+        <foreach
+                collection="orgIds"
+                item="orgId"
+                open="("
+                separator=","
+                close=")">
+            #{orgId}
+        </foreach>
+
+        UNION
+
+        SELECT parent_info.*
+        FROM sys_organize parent_info
+        JOIN visible_organize child_info
+        ON child_info.parent_id = parent_info.id
+        )
+
+        SELECT DISTINCT *
+        FROM visible_organize
+        ORDER BY parent_id, sort_order, id
+    </select>
+
+</mapper>

@@ -135,4 +135,20 @@ public interface RoleMapper extends BaseMapper<Role> {
     int insertUserRoles(
             @Param("userId") Long userId,
             @Param("roleIds") Collection<Long> roleIds);
+
+    @Select("""
+            SELECT role_data_org.org_id
+            FROM sys_role_data_org role_data_org
+            WHERE role_data_org.role_id = #{roleId}
+            ORDER BY role_data_org.org_id
+            """)
+    List<Long> findDataOrgIdsByRoleId(
+            @Param("roleId") Long roleId);
+
+    int deleteDataOrgsByRoleId(
+            @Param("roleId") Long roleId);
+
+    int insertRoleDataOrgs(
+            @Param("roleId") Long roleId,
+            @Param("orgIds") Collection<Long> orgIds);
 }

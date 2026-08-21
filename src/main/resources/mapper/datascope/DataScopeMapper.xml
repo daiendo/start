@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.daiend.muriox.datascope.DataScopeMapper">
+
+    <select
+            id="findUserDataScopeRows"
+            resultType="com.daiend.muriox.datascope.UserDataScopeRow">
+
+        SELECT
+        user_info.id AS user_id,
+        user_info.org_id AS user_org_id,
+        role_info.id AS role_id,
+        role_info.data_scope_type,
+        role_data_org.org_id AS custom_org_id
+
+        FROM sys_user user_info
+
+        LEFT JOIN sys_user_role user_role
+        ON user_role.user_id = user_info.id
+
+        LEFT JOIN sys_role role_info
+        ON role_info.id = user_role.role_id
+        AND role_info.status = TRUE
+
+        LEFT JOIN sys_role_data_org role_data_org
+        ON role_data_org.role_id = role_info.id
+        AND role_info.data_scope_type = 'CUSTOM_ORG'
+
+        WHERE user_info.id = #{userId}
+        AND user_info.enabled = TRUE
+
+        ORDER BY
+        role_info.id,
+        role_data_org.org_id
+    </select>
+
+    <select
+            id="findSelfAndDescendantOrgIds"
+            resultType="java.lang.Long">
+
+        WITH RECURSIVE organize_tree (id) AS (
+        SELECT organize_info.id
+        FROM sys_organize organize_info
+        WHERE organize_info.id = #{orgId}
+
+        UNION
+
+        SELECT child_info.id
+        FROM sys_organize child_info
+        JOIN organize_tree parent_info
+        ON child_info.parent_id = parent_info.id
+        )
+
+        SELECT id
+        FROM organize_tree
+        ORDER BY id
+    </select>
+
+</mapper>
